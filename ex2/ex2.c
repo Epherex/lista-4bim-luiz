@@ -7,13 +7,13 @@
 struct timespec tempoInicio, tempoFim;
 int* tempoatual;
 
-void atualizarTempo(){
+void* atualizarTempo(){
     clock_gettime(CLOCK_MONOTONIC_RAW, &tempoFim);
     tempoatual = ((tempoFim.tv_sec - tempoInicio.tv_sec) * 1000000 + (tempoFim.tv_nsec - tempoInicio.tv_nsec) / 1000)/1000000;
     printf("%d\n", tempoatual);
 }
 
-void clockStart(){
+void* clockStart(){
     clock_gettime(CLOCK_MONOTONIC_RAW, &tempoInicio);
     while(tempoatual <= 60){
         atualizarTempo();
@@ -21,7 +21,7 @@ void clockStart(){
     return;
 }
 
-void ThreadDoInput(){
+void* inputMain(){
 
 }
 
@@ -32,7 +32,12 @@ int main(){
     int  statusPrincipal, statusInput;
 
     statusPrincipal = pthread_create( &principal, NULL, clockStart, NULL);
-    statusInput = pthread_create( &principal, NULL, timerStart, NULL);
+    statusInput = pthread_create( &input, NULL, inputMain, NULL);
+    
+    if(statusPrincipal || statusInput){
+        printf("Deu merda\n");
+        exit(1);
+    }
 
     pthread_join(principal, NULL);
     //Executa esse código após o timer acabar
