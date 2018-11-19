@@ -1,20 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <sys/time.h>
+#include <time.h>
 #include <pthread.h>
 
-struct timespec tempoInicio, tempoFim;
+time_t tempoInicio, tempoFim;
 int* tempoatual;
 
 void* atualizarTempo(){
-    clock_gettime(CLOCK_MONOTONIC_RAW, &tempoFim);
-    tempoatual = ((tempoFim.tv_sec - tempoInicio.tv_sec) * 1000000 + (tempoFim.tv_nsec - tempoInicio.tv_nsec) / 1000)/1000000;
+    time (&tempoFim);
+    tempoatual = (int) difftime(tempoFim, tempoInicio);
     printf("%d\n", tempoatual);
 }
 
 void* clockStart(){
-    clock_gettime(CLOCK_MONOTONIC_RAW, &tempoInicio);
+    time (&tempoInicio);
     while(tempoatual <= 60){
         atualizarTempo();
     }
