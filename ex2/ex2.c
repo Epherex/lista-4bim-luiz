@@ -61,14 +61,17 @@ bool rodando = true;
 correcaoNode *corrigirPalavra(correcaoNode *inicio, char *entrada, char *gabarito)
 {
     correcaoNode *aux, *aux2;
-    bool acertou; 
-    //printf("Comparando |%s|(%d)  com  |%s|(%d) - ", entrada, strlen(entrada), gabarito, strlen(gabarito));
-    if(strcmp(entrada, gabarito)==0){
+    bool acertou;
+    printf("Comparando |%s|(%d)  com  |%s|(%d) - ", entrada, strlen(entrada), gabarito, strlen(gabarito));
+    if (strcmp(entrada, gabarito) == 0)
+    {
         acertou = true;
-    }else{
+    }
+    else
+    {
         acertou = false;
     }
-    //printf("Resultado %d \n", acertou);
+    printf("Resultado %d \n", acertou);
 
     if (inicio == NULL)
     {
@@ -288,10 +291,17 @@ void *inputMain()
     return;
 }
 
-void *leituraArquivo()
+void *leituraArquivo(int texto)
 {
     FILE *arq;
-    arq = fopen("digitacao1.txt", "r");
+    if (texto == 1)
+    {
+        arq = fopen("digitacao1.txt", "r");
+    }
+    else
+    {
+        arq = fopen("digitacao2.txt", "r");
+    }
 
     char *buffer = calloc(64, sizeof(char));
     int cont = 0;
@@ -300,7 +310,8 @@ void *leituraArquivo()
     while (1)
     {
         chr = fgetc(arq);
-        if (chr == 32 || feof(arq) || chr == 12 || chr == '\n')
+        if (chr == 32 || feof(arq))
+        //|| chr == 12 || chr == '\n'
         {
             inicioComparacao = inserirPalavraNode(inicioComparacao, buffer);
             buffer = calloc(64, sizeof(char));
@@ -309,11 +320,15 @@ void *leituraArquivo()
             {
                 break;
             }
-        }else{
-        buffer[cont] = chr;
-        cont++;
+        }
+        else
+        {
+            buffer[cont] = chr;
+            cont++;
         }
     }
+
+    fclose(arq);
 
     ///
     correcaoNode *inicioCorrecao = NULL;
@@ -332,7 +347,8 @@ void *leituraArquivo()
     }
 
     correcaoNode *ctc = inicioCorrecao;
-    int totaldeacertos = 0;
+    int acertos = 0;
+    int erros = 0;
     printf("\n\n");
     while (1)
     {
@@ -340,32 +356,37 @@ void *leituraArquivo()
         if (acertou)
         {
             printf("\033[0;32m");
-            totaldeacertos++;
+            acertos++;
         }
         else
         {
             printf("\033[0;31m");
+            erros++;
         }
         printf("%s ", ctc->data);
         ctc = ctc->prox;
-        if(ctc == NULL){
+        if (ctc == NULL)
+        {
             break;
         }
     }
-        printf("\033[0;32m");
-    printf("\nSua velocidade é de %d por minuto\n", totaldeacertos);
+    printf("\033[0;32m");
+    printf("\n\nSua velocidade é de %d palavras por minuto\nVocê digitou %d palavras erradas e %d palavras certas.\n", (acertos + erros), erros, acertos);
 }
 
-void *finishPos()
+void *finishPos(void *textoSelecionado)
 {
-  //  int rate = leituraPalavras(inicioGeral);
-  //  printf("\nVocê digita incriveis %d merdas por segundo\n", rate * 6);
-    leituraArquivo();
+    //  int rate = leituraPalavras(inicioGeral);
+    //  printf("\nVocê digita incriveis %d merdas por segundo\n", rate * 6);
+    leituraArquivo((int)textoSelecionado);
 }
 
 int main()
 {
-    printf("Iniciado com o texto 1: Go!\n");
+    int *text;
+    printf("Escolha o texto: (1) (2)\n");
+    scanf("%d", &text);
+    printf("\nGo!\n");
     tempoatual = 0;
 
     pthread_t principal, input, pos;
@@ -382,7 +403,7 @@ int main()
 
     pthread_join(principal, NULL);
     pthread_cancel(input);
-    pthread_create(&pos, NULL, finishPos, NULL);
+    pthread_create(&pos, NULL, finishPos, (void *)text);
     pthread_join(pos, NULL);
 
     return 0;
