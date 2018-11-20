@@ -62,7 +62,7 @@ correcaoNode *corrigirPalavra(correcaoNode *inicio, char *entrada, char *gabarit
 {
     correcaoNode *aux, *aux2;
     bool acertou;
-    printf("Comparando |%s|(%d)  com  |%s|(%d) - ", entrada, strlen(entrada), gabarito, strlen(gabarito));
+    //printf("Comparando |%s|(%d)  com  |%s|(%d) - ", entrada, strlen(entrada), gabarito, strlen(gabarito));
     if (strcmp(entrada, gabarito) == 0)
     {
         acertou = true;
@@ -71,7 +71,7 @@ correcaoNode *corrigirPalavra(correcaoNode *inicio, char *entrada, char *gabarit
     {
         acertou = false;
     }
-    printf("Resultado %d \n", acertou);
+    //printf("Resultado %d \n", acertou);
 
     if (inicio == NULL)
     {
