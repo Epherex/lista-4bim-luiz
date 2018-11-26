@@ -28,7 +28,7 @@ char getch()
     old.c_lflag |= ECHO;
     if (tcsetattr(0, TCSADRAIN, &old) < 0)
         perror("tcsetattr ~ICANON");
-    printf("\e[2;36m%c\e[0m", buf);
+    printf("\e[34m%c\e[0m", buf);
     return buf;
 }
 #endif
@@ -281,9 +281,9 @@ void *inputMain()
         }
         else if (asp == 8 + palavracounter)
         {
-            printf("\e[1;93;4m%s\e[0m", aux->data);
+            printf("\e[1;93;4m%s \e[0m", aux->data);
         }
-        else if (asp == palavracounter)
+        else if (asp == palavracounter) 
         {
             printf("\e[1;93m%s \e[0m", aux->data);
         }
@@ -319,7 +319,7 @@ void *inputMain()
                         }
                         else if (asp == 8 + palavracounter)
                         {
-                            printf("\e[1;93;4m%s\e[0m", aux->data);
+                            printf("\e[1;93;4m%s \e[0m", aux->data);
                         }
                         else if (asp == palavracounter)
                         {
