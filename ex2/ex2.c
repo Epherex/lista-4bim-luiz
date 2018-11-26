@@ -28,7 +28,7 @@ char getch()
     old.c_lflag |= ECHO;
     if (tcsetattr(0, TCSADRAIN, &old) < 0)
         perror("tcsetattr ~ICANON");
-    printf("%c", buf);
+    printf("\e[2;36m%c\e[0m", buf);
     return buf;
 }
 #endif
@@ -55,14 +55,24 @@ typedef struct correcaoNode
 time_t tempoInicio, tempoFim;
 palavraNode *inicioGeral = NULL;
 palavraNode *inicioComparacao = NULL;
+palavraNode *waynode = NULL;
 int *tempoatual;
+int palavracounter = 0;
 bool rodando = true;
 
 correcaoNode *corrigirPalavra(correcaoNode *inicio, char *entrada, char *gabarito)
 {
     correcaoNode *aux, *aux2;
     bool acertou;
-    //printf("Comparando |%s|(%d)  com  |%s|(%d) - ", entrada, strlen(entrada), gabarito, strlen(gabarito));
+    /* printf("Comparando |%s|(%d)  com  |%s|(%d) - ", entrada, strlen(entrada), gabarito, strlen(gabarito));
+    printf("\n");
+    for(int i = 0; i < strlen(entrada); i++){
+        printf("%d ", entrada[i]);
+    }
+    printf("\n");
+    for(int i = 0; i < strlen(gabarito); i++){
+        printf("%d ", gabarito[i]);
+    }*/
     if (strcmp(entrada, gabarito) == 0)
     {
         acertou = true;
@@ -189,7 +199,7 @@ char *obterPalavra(charNode *inicio)
         char *buffer;
         if (inicio->prox != NULL)
         {
-            buffer = calloc(32, sizeof(char));
+            buffer = calloc(64, sizeof(char));
             int pointer = 0;
             charNode *a = inicio;
             while (true)
@@ -202,6 +212,7 @@ char *obterPalavra(charNode *inicio)
                     break;
                 }
             }
+            buffer = realloc(buffer, strlen(buffer) * sizeof(char)); //Memória RAM não ta barato²
         }
         else
         {
@@ -261,6 +272,28 @@ void *clockStart()
 
 void *inputMain()
 {
+    palavraNode *aux = waynode;
+    for (int asp = 0; asp < 10; asp++)
+    {
+        if (asp == 9 + palavracounter)
+        {
+            printf("\e[1;93;4m%s\n\e[0m", aux->data);
+        }
+        else if (asp == 8 + palavracounter)
+        {
+            printf("\e[1;93;4m%s\e[0m", aux->data);
+        }
+        else if (asp == palavracounter)
+        {
+            printf("\e[1;93m%s \e[0m", aux->data);
+        }
+        else if (asp > palavracounter)
+        {
+            printf("\e[1;93m%s \e[0m", aux->data);
+        }
+        aux = aux->prox;
+    }
+
     charNode *inicioAtual = NULL;
     int pos = 0;
     while (rodando)
@@ -274,6 +307,32 @@ void *inputMain()
             {
                 inicioAtual = reset(inicioAtual);
                 inicioGeral = inserirPalavraNode(inicioGeral, palavra);
+                palavracounter++;
+                if (palavracounter % 8 == 0)
+                {
+                    aux = waynode;
+                    for (int asp = 0; asp < 10 + palavracounter; asp++)
+                    {
+                        if (asp == 9 + palavracounter)
+                        {
+                            printf("\e[1;93;4m%s\n\e[0m", aux->data);
+                        }
+                        else if (asp == 8 + palavracounter)
+                        {
+                            printf("\e[1;93;4m%s\e[0m", aux->data);
+                        }
+                        else if (asp == palavracounter)
+                        {
+                            printf("\e[1;93m\n\n%s \e[0m", aux->data);
+                        }
+                        else if (asp > palavracounter)
+                        {
+                            printf("\e[1;93m%s \e[0m", aux->data);
+                        }
+
+                        aux = aux->prox;
+                    }
+                }
             }
         }
         else
@@ -289,6 +348,48 @@ void *inputMain()
         inicioGeral = inserirPalavraNode(inicioGeral, palavra);
     }
     return;
+}
+
+void *carregarPrint(int texto)
+{
+    FILE *arq;
+    if (texto == 1)
+    {
+        arq = fopen("digitacao1.txt", "r");
+    }
+    else
+    {
+        arq = fopen("digitacao2.txt", "r");
+    }
+
+    char *buffer = calloc(64, sizeof(char));
+    int cont = 0;
+
+    char chr = 0;
+
+    while (1)
+    {
+        chr = fgetc(arq);
+        if (chr == 32 || feof(arq) || chr == 12 || chr == '\n' || chr == 10)
+        //|| chr == 12 || chr == '\n'
+        {
+            buffer = realloc(buffer, strlen(buffer) * sizeof(char)); //Por que memória RAM ta caro né
+            waynode = inserirPalavraNode(waynode, buffer);
+            buffer = calloc(64, sizeof(char));
+            cont = 0;
+            if (feof(arq))
+            {
+                break;
+            }
+        }
+        else
+        {
+            buffer[cont] = chr;
+            cont++;
+        }
+    }
+
+    fclose(arq);
 }
 
 void *leituraArquivo(int texto)
@@ -310,9 +411,10 @@ void *leituraArquivo(int texto)
     while (1)
     {
         chr = fgetc(arq);
-        if (chr == 32 || feof(arq))
+        if (chr == 32 || feof(arq) || chr == 12 || chr == '\n' || chr == 10)
         //|| chr == 12 || chr == '\n'
         {
+            buffer = realloc(buffer, strlen(buffer) * sizeof(char)); //Por que memória RAM ta caro né
             inicioComparacao = inserirPalavraNode(inicioComparacao, buffer);
             buffer = calloc(64, sizeof(char));
             cont = 0;
@@ -370,8 +472,7 @@ void *leituraArquivo(int texto)
             break;
         }
     }
-    printf("\033[0;32m");
-    printf("\n\nSua velocidade é de %d palavras por minuto\nVocê digitou %d palavras erradas e %d palavras certas.\n", (acertos + erros), erros, acertos);
+    printf("\n\n\e[40;38;5;82mSua velocidade é de \e[30;48;5;82m%d palavras\e[40;38;5;82m por minuto\nVocê digitou \e[30;48;5;82m%d palavras\e[40;38;5;82m erradas e \e[30;48;5;82m%d palavras\e[40;38;5;82m certas.\n", (acertos + erros), erros, acertos);
 }
 
 void *finishPos(void *textoSelecionado)
@@ -384,13 +485,14 @@ void *finishPos(void *textoSelecionado)
 int main()
 {
     int *text;
-    printf("Escolha o texto: (1) (2)\n");
+    printf("\e[1;4mEscolha o texto: (1) (2)\n\e[0m");
     scanf("%d", &text);
     printf("\nGo!\n");
     tempoatual = 0;
 
     pthread_t principal, input, pos;
     int statusPrincipal, statusInput;
+    carregarPrint(text);
 
     statusPrincipal = pthread_create(&principal, NULL, clockStart, NULL);
     statusInput = pthread_create(&input, NULL, inputMain, NULL);
