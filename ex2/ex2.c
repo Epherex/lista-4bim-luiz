@@ -484,6 +484,9 @@ void *finishPos(void *textoSelecionado)
 
 int main()
 {
+    struct termios attrib_old;
+    tcgetattr( 0, &attrib_old );
+
     int *text;
     printf("\e[1;4mEscolha o texto: (1) (2)\n\e[0m");
     scanf("%d", &text);
@@ -507,6 +510,8 @@ int main()
     pthread_cancel(input);
     pthread_create(&pos, NULL, finishPos, (void *)text);
     pthread_join(pos, NULL);
+
+    tcsetattr( 0, TCSANOW, &attrib_old );
 
     return 0;
 }
